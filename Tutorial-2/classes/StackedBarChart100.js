@@ -1,4 +1,4 @@
-class BarChart {
+class StackedBarChart100 {
   // constructor defines everything that's in the object
   constructor({
     _height = 400,
@@ -10,10 +10,11 @@ class BarChart {
     _labels = 0,
     _xRotate = 0,
     _labelColumn,
-    _dataColumn,
+    _dataColumns1,
     _lineGraphColumnData = 0,
     _graphTitle = "Graph Title",
-    _yAxisTitle = "Y Values",
+    _barsTitle = "Bars Title",
+    _yAxisTitle = "Values",
     _linesTitle = "Line Graph Title",
     _numberScale = 0,
     _lineNumberScale = 0,
@@ -26,18 +27,26 @@ class BarChart {
     this.data = _data;
     this.labels = _labels;
     this.xRotate = _xRotate;
+    this.rounding = // what num to round to
+      // default all values, inc data
+      // replace all construstor options with an object
+      // accepted in any order
 
-    // TABLE COLUMN SETTINGS
-    this.columnData = int(this.data.getColumn(_dataColumn));
+      // TABLE COLUMN SETTINGS
+      this.columnNames = _dataColumns1;
+    this.columnData = this.data.getColumn(_dataColumns1);
+    this.dataTotal = int(this.data.getColumn("total"));
+
+    this.columnTitle = _labelColumn;
     this.columnLabels = this.data.getColumn(_labelColumn);
     this.lineGraphColumnData = int(this.data.getColumn(_lineGraphColumnData));
 
-    // Line graph not draw if value has defaulted to 0
-    this.columnTitle = _labelColumn;
+    // TABLE TITLES
     this.graphTitle = _graphTitle;
-
+    this.barsTitle = _barsTitle;
     this.yAxisTitle = _yAxisTitle;
     this.linesTitle = _linesTitle;
+
     this.numberScale = _numberScale;
     this.lineNumberScale = _lineNumberScale;
 
@@ -54,7 +63,8 @@ class BarChart {
     this.numTicks = _numTicks;
     this.notchGap = this.height / this.numTicks;
     this.tickLength = 5;
-    this.maxValue = this.calculateMax(this.columnData);
+    this.maxValue = 100;
+    // this.maxValue = this.calculateMax(this.dataTotal);
     this.maxLineValue = this.calculateMax(this.lineGraphColumnData);
 
     // COLOUR PALETTE
@@ -69,19 +79,10 @@ class BarChart {
     this.yText = this.height * 0.03;
   }
 
-  // beginShape()
-  // loop through points
-  // endShape()
   // METHODS
 
   render() {
     this.mapData(this.columnData, this.mappedData, this.maxValue);
-    this.mapData(
-      this.lineGraphColumnData,
-      this.lineMappedData,
-      this.maxLineValue
-    );
-    // this.mapLineData(this.lineGraphColumnData);
 
     push();
     translate(this.posX, this.posY);
@@ -93,7 +94,6 @@ class BarChart {
     this.notches();
     this.yLabels();
     this.xLabels();
-
     this.drawLineGraph();
     pop();
   }
@@ -103,46 +103,83 @@ class BarChart {
 
     for (let x = 0; x < _data.length; x++) {
       if (_data[x] > max) {
-        max = _data[x];
+        max = (_data[x]).toFixed();
       }
     }
-    for (let x = max; x < 10000000; x++) {
-      if (x % this.numTicks == 0) {
-        max = x;
-        break;
-      }
-    }
+    // for (let x = max; x < 10000000; x++) {
+    //   if (x % this.numTicks == 0) {
+    //     max = x;
+    //     break;
+    //   }
+    // }
     return max;
   }
 
   /////////////////////////////////////////////
   // Scales values to display blocks using the full height of the chart
   /////////////////////////////////////////////
-  mapData(_array, _name, _maxValue) {
+  mapData(_val, _max) {
     // make numbers more manageable by using _numberScale to divide
-    _array.forEach((element) => {
-      element / this.numberScale;
-    });
+    // _array.forEach((element) => { 
+    //   element / this.numberScale;
+    // });
 
-    for (let i = 0; i < _array.length; i++) {
-      // maps each value to fit within the chart height and pushes into new array
-      _name.push(map(_array[i], 0, _maxValue, 0, this.height));
-    }
+    // for (let i = 0; i < _array.length; i++) {
+    //   // maps each value to fit within the chart height and pushes into new array
+    //   _name.push(map(_array[i], 0, _maxValue, 0, this.height));
+    // }
+
+    // get total from each stacked back and multiply by scale value (height / maxVal which is 100)
+
+    return map(_val, 0, _max, 0, this.height);
   }
+  
+  barScaler(_bar, _total) {
+    let scaleValue = this.height / _total;
+    return _bar * scaleValue;
+    }
 
   /////////////////////////////////////////////
   // Draws each bar in the bar chart
   /////////////////////////////////////////////
   drawBars() {
-    noStroke();
-    for (let x = 0; x < this.numBlocks; x++) {
-      let barPos = x * this.barWidth + x * this.barGap + this.margin; // add master gap that increments
-      // uses the Scaler() method to scale the value and store it in a variable
-      let currentBar = -this.mappedData[x];
+    // Draw legend and translate to top right of graph
+    push();
+    translate(this.width + 50, -this.height + 20);
+    this.drawLegend();
+    pop();
 
-      fill(color(this.palette[x % this.palette.length]));
-      rect(barPos, 0, this.barWidth, currentBar);
+    // Starts the bar drawing at the margin
+    push();
+    translate(this.margin, 0);
+    // translate(this.margin + (this.barWidth * x) + (this.barGap * x), 0);
+    
+    // First loop to draw the bars
+    for (let x = 0; x < this.data.getRowCount(); x++) {
+      push();
+
+      let barHeight = int(-this.data.rows[x].obj["total"]);
+      // console.log(barHeight);
+
+      // Second loop to draw the stacks of each bar
+      for (let y = 0; y < this.columnNames.length; y++) {
+
+        // Scale the array of column data at this point
+        let current = this.columnNames[y];
+        let height = -this.data.rows[x].obj[current];
+        fill(color(this.palette[y % this.palette.length]));
+        rect(
+          (this.barWidth + this.barGap) * x,
+          0,
+          this.barWidth,
+          -this.barScaler(height, barHeight),
+        );
+        translate(0, -this.barScaler(height, barHeight));
+      }
+      translate(this.barGap * x, 0);
+      pop();
     }
+    pop();
   }
 
   drawLineGraph() {
@@ -222,6 +259,23 @@ class BarChart {
     }
   }
 
+  drawLegend() {
+    push();
+    for (let x = 0; x < this.columnNames.length; x++) {
+      let nColour = x % this.palette.length;
+      let legend = this.columnNames[x];
+      fill(color(this.palette[nColour]));
+      // stroke(255);
+      // strokeWeight(1);
+      noStroke();
+      circle(0, 0, 10);
+      textAlign(LEFT, CENTER);
+      text(legend, 10, 1);
+      translate(0, 30);
+    }
+    pop();
+  }
+
   chartTitle() {
     let title = this.graphTitle; //use variable from table later
 
@@ -241,14 +295,7 @@ class BarChart {
     // Draws column title
     textAlign(CENTER, CENTER);
     textSize(this.axisTitle);
-    let pos = 45;
-
-    // If labels are rotated display lower
-    if (this.xRotate == 1) {
-      pos += 15;
-    }
-
-    text(this.columnTitle, this.width / 2, pos);
+    text(this.columnTitle, this.width / 2, 40);
 
     // Draws column text
     for (let x = 0; x < this.numBlocks; x++) {
@@ -308,7 +355,7 @@ class BarChart {
       textSize(this.yText);
       textFont("Helvetica");
       textAlign(RIGHT, CENTER);
-      text(axisNum, -this.tickLength - 5, x * -this.notchGap);
+      text(axisNum.toFixed(), -this.tickLength - 5, x * -this.notchGap);
       // }
     }
   }
