@@ -28,10 +28,7 @@ class StackedBarChart100 {
     this.data = _data;
     this.labels = _labels;
     this.xRotate = _xRotate;
-    this.rounding = // what num to round to
-      // default all values, inc data
-      // replace all construstor options with an object
-      // accepted in any order
+
 
       // TABLE COLUMN SETTINGS
       this.columnNames = _dataColumns1;
@@ -115,12 +112,6 @@ class StackedBarChart100 {
         max = _data[x].toFixed();
       }
     }
-    // for (let x = max; x < 10000000; x++) {
-    //   if (x % this.numTicks == 0) {
-    //     max = x;
-    //     break;
-    //   }
-    // }
     return max;
   }
 
@@ -128,18 +119,6 @@ class StackedBarChart100 {
   // Scales values to display blocks using the full height of the chart
   /////////////////////////////////////////////
   mapData(_val, _max) {
-    // make numbers more manageable by using _numberScale to divide
-    // _array.forEach((element) => {
-    //   element / this.numberScale;
-    // });
-
-    // for (let i = 0; i < _array.length; i++) {
-    //   // maps each value to fit within the chart height and pushes into new array
-    //   _name.push(map(_array[i], 0, _maxValue, 0, this.height));
-    // }
-
-    // get total from each stacked back and multiply by scale value (height / maxVal which is 100)
-
     return map(_val, 0, _max, 0, this.height);
   }
 
@@ -154,13 +133,6 @@ class StackedBarChart100 {
       _name.push(map(_array[i], 0, _maxValue, 0, this.height));
     }
   }
-
-  barScaler(_bar, _total) {
-    let scaleValue = this.height / _total;
-    // console.log(scaleValue);
-    return int(_bar * scaleValue);
-  }
-
   /////////////////////////////////////////////
   // Draws each bar in the bar chart
   /////////////////////////////////////////////
@@ -262,6 +234,7 @@ class StackedBarChart100 {
           ).toFixed(); //round to whole nums
         }
 
+        // adds a 'k' to axis nums above 0
         if (axisNum > 0) {
           axisNum += "k";
         }
@@ -288,6 +261,9 @@ class StackedBarChart100 {
 
   drawLegend() {
     push();
+    // translate down 10 to position with top of graph
+    translate(0, 10)
+    push();
     for (let x = 0; x < this.columnNames.length; x++) {
       let nColour = x % this.palette.length;
       let legend = this.columnNames[x];
@@ -298,8 +274,10 @@ class StackedBarChart100 {
       circle(0, 0, 10);
       textAlign(LEFT, CENTER);
       text(legend, 10, 1);
-      translate(0, 30);
+      // translate each time up to order legend colour the same as bars
+      translate(0, -30);
     }
+    pop();
     pop();
   }
 
@@ -334,9 +312,6 @@ class StackedBarChart100 {
     // Draws column text
     for (let x = 0; x < this.numBlocks; x++) {
       let barPos = x * this.barWidth + x * this.barGap + this.margin;
-      let midPoint = this.barWidth / 2;
-      let gap = midPoint + this.barGap;
-      let pos = this.margin + gap * (x + 1);
 
       textSize(this.xText);
 
@@ -388,14 +363,12 @@ class StackedBarChart100 {
       }
       
       // scale the numbers
-      // if(this.labels == 1){
       fill(this.lightColour);
       noStroke(0);
       textSize(this.yText);
       textFont("Helvetica");
       textAlign(RIGHT, CENTER);
       text(axisNum, -this.tickLength - 5, x * -this.notchGap);
-      // }
     }
   }
 
@@ -419,6 +392,7 @@ class StackedBarChart100 {
   }
 
   xAxisLines() {
+    // draws lines one less
     for (let x = 0; x < this.numTicks + 1; x++) {
       strokeWeight(1);
       stroke(this.fadedColour);

@@ -28,6 +28,7 @@ class BarChart {
     this.xRotate = _xRotate;
 
     // TABLE COLUMN SETTINGS
+    // gets data from table by column name that user inputted when making object
     this.columnData = int(this.data.getColumn(_dataColumn));
     this.columnLabels = this.data.getColumn(_labelColumn);
     this.lineGraphColumnData = int(this.data.getColumn(_lineGraphColumnData));
@@ -49,6 +50,7 @@ class BarChart {
     this.lineMappedData = [];
     this.margin = 20;
     this.barGap = 5;
+    // dynamically caluculating the bar width from other variables
     this.barWidth =
       (this.width - this.margin * 2 - this.barGap * (this.numBlocks - 1)) /
       this.numBlocks;
@@ -56,13 +58,15 @@ class BarChart {
     this.numTicks = _numTicks;
     this.notchGap = this.height / this.numTicks;
     this.tickLength = 5;
+
+    // finds and stores the max value from arrays of data
     this.maxValue = this.calculateMax(this.columnData);
     this.maxLineValue = this.calculateMax(this.lineGraphColumnData);
 
     // COLOUR PALETTE
     this.fadedColour = "#534D4D";
     this.lightColour = "#FCF8F5";
-    this.palette = ["#F15060", "#F68A8D", "#F5DCDD"]; // pink3, pink2, pink1, white
+    this.palette = ["#F15060", "#F68A8D", "#F5DCDD"]; // pink3, pink2, pink1
 
     // TEXT SIZES - scales text to size of chart
     this.graphTitleSize = 25;
@@ -76,6 +80,7 @@ class BarChart {
   // endShape()
   // METHODS
 
+  // draws all elements
   render() {
     this.mapData(this.columnData, this.mappedData, this.maxValue);
     this.mapData(
@@ -101,13 +106,17 @@ class BarChart {
   }
 
   calculateMax(_data) {
+    // initialise to 0
     let max = 0;
 
+    // loop through array and finds highest value
     for (let x = 0; x < _data.length; x++) {
       if (_data[x] > max) {
         max = _data[x];
       }
     }
+
+    // increases 'max' by 1 until it's divisible by the number of ticks on axis
     for (let x = max; x < 10000000; x++) {
       if (x % this.numTicks == 0) {
         max = x;
@@ -117,14 +126,14 @@ class BarChart {
     return max;
   }
 
-  /////////////////////////////////////////////
+
   // Scales values to display blocks using the full height of the chart
-  /////////////////////////////////////////////
   mapData(_array, _name, _maxValue) {
     // make numbers more manageable by using _numberScale to divide
     _array.forEach((element) => {
       element / this.numberScale;
     });
+
 
     for (let i = 0; i < _array.length; i++) {
       // maps each value to fit within the chart height and pushes into new array
@@ -148,14 +157,16 @@ class BarChart {
   }
 
   drawLineGraph() {
-      // if no line data was given, then none of the line graphs elements will be drawn
+    // if no line data was given, then none of the line graphs elements will be drawn
     if (this.lineDataFilled == 0) {
       return;
     } else {
+
       // DRAW DOTS
       for (let x = 0; x < this.numBlocks; x++) {
         let barPos = x * this.barWidth + x * this.barGap + this.margin;
         push();
+        // translates to position for dots to be draw in the middle of the current bar
         translate(barPos + this.barWidth / 2, -this.lineMappedData[x]);
         fill(255);
         circle(0, 0, 8);
@@ -163,11 +174,15 @@ class BarChart {
       }
 
       // DRAW LINES
+      // one less line is needed than are number of blocks, e.g 5 blocks, only 4 lines, so numBlocks - 1
       for (let x = 0; x < this.numBlocks - 1; x++) {
+        // calculating position of each bar
         let barPos = x * this.barWidth + x * this.barGap + this.margin;
+        // end position + 5 to center align to the circle
         let endX = this.barWidth + 5;
         let endY = -(this.lineMappedData[x + 1] - this.lineMappedData[x]);
         push();
+        // position to draw line in the center of the bar
         translate(barPos + this.barWidth / 2, -this.lineMappedData[x]);
         stroke(255);
         strokeWeight(1.5);
@@ -216,6 +231,7 @@ class BarChart {
       // Draws y axis title
       push();
       translate(this.width + 50, -this.height / 2);
+      // radians() to indicate measurement unit used for rotate
       rotate(radians(90));
       noStroke();
       textAlign(CENTER, CENTER);
@@ -256,9 +272,6 @@ class BarChart {
     // Draws column text
     for (let x = 0; x < this.numBlocks; x++) {
       let barPos = x * this.barWidth + x * this.barGap + this.margin;
-      let midPoint = this.barWidth / 2;
-      let gap = midPoint + this.barGap;
-      let pos = this.margin + gap * (x + 1);
 
       textSize(this.xText);
 

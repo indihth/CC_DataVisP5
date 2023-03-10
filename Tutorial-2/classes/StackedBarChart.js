@@ -12,6 +12,7 @@ class StackedBarChart {
     _labelColumn,
     _dataColumns1,
     _dataColumns2,
+    _dataTotal,
     _lineGraphColumnData = 0,
     _graphTitle = "Graph Title",
     _barsTitle = "Bars Title",
@@ -37,7 +38,7 @@ class StackedBarChart {
       this.columnNames = _dataColumns1;
     this.columnData = this.data.getColumn(_dataColumns1);
     this.columnData2 = this.data.getColumn(_dataColumns2);
-    this.dataTotal = int(this.data.getColumn("total"));
+    this.dataTotal = int(this.data.getColumn(_dataTotal));
 
     this.columnTitle = _labelColumn;
     this.columnLabels = this.data.getColumn(_labelColumn);
@@ -119,16 +120,6 @@ class StackedBarChart {
   // Scales values to display blocks using the full height of the chart
   /////////////////////////////////////////////
   mapData(_val) {
-    // make numbers more manageable by using _numberScale to divide
-    // _array.forEach((element) => {
-    //   element / this.numberScale;
-    // });
-
-    // for (let i = 0; i < _array.length; i++) {
-    //   // maps each value to fit within the chart height and pushes into new array
-    //   _name.push(map(_array[i], 0, _maxValue, 0, this.height));
-    // }
-
     return map(_val, 0, this.maxValue, 0, this.height);
   }
 
@@ -169,6 +160,9 @@ class StackedBarChart {
 
   drawLegend() {
     push();
+    // translate down 40 to position with top of graph
+    translate(0, 40)
+    push();
     for (let x = 0; x < this.columnNames.length; x++) {
       let nColour = x % this.palette.length;
       let legend = this.columnNames[x];
@@ -179,8 +173,10 @@ class StackedBarChart {
       circle(0, 0, 10);
       textAlign(LEFT, CENTER);
       text(legend, 10, 1);
-      translate(0, 30);
+      // translate each time up to order legend colour the same as bars
+      translate(0, -30);
     }
+    pop();
     pop();
   }
 
@@ -235,7 +231,7 @@ class StackedBarChart {
   yLabels() {
     // Draws y axis title
     push();
-    translate(-40, -this.height / 2);
+    translate(-70, -this.height / 2);
     rotate(radians(-90));
     noStroke();
     textAlign(CENTER, CENTER);

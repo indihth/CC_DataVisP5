@@ -16,6 +16,7 @@ function preload() {
   table2 = loadTable("data/covid.csv", "csv", "header");
   usa = loadTable("data/covidUSA.csv", "csv", "header");
   ireland = loadTable("data/age-sexIRL.csv", "csv", "header");
+  vacc = loadTable("data/weeklyVac.csv", "csv", "header");
 
   table3 = loadTable("data/langReport.csv", "csv", "header");
 
@@ -23,14 +24,14 @@ function preload() {
 
 
 function setup() {
-  createCanvas(1500, 1000);
+  createCanvas(1200, 1000);
   
   charts.push(new BarChart({
     _height: 300, 
     _width: 350, 
     // _posX: 100, 
     // _posY: 400, 
-     _posX: 600, 
+     _posX: 700, 
     _posY: 400,
     _data: table2, 
     _labelColumn: "Country",
@@ -65,10 +66,10 @@ function setup() {
   }));
 
   charts.push(new HorizontalBarChart({
-    _height: 400, 
-    _width: 350, 
-    _posX: 1100, 
-    _posY: 500, 
+    _height: 350, 
+    _width: 400, 
+    _posX: 700, 
+    _posY: 900, 
     _data: table2, 
     _labelColumn: "Country",
     _dataColumn: "Total Cases",
@@ -78,6 +79,20 @@ function setup() {
     _numberScale: 1000000 // 1:1 million
   }));
 
+  charts.push(new StackedBarChart({
+    _height: 300, 
+    _width: 350, 
+    _posX: 100, 
+    _posY: 900, 
+    _height: 300, 
+    _data: vacc, 
+    _labelColumn: "Weeks",
+    _dataColumns1: ["Moderna", "Pfizer", "AstraZeneca"],
+    _dataTotal: "TotalweeklyVaccines",
+    _graphTitle: "Weekly Irish Vaccine Rates in 2021",
+    _yAxisTitle: "Vaccines",
+    _numTicks: 4
+  }));
 
 }
 
@@ -87,6 +102,8 @@ function draw() {
   charts[0].render();
   charts[1].render();
   charts[2].render();
+  charts[3].render();
+  charts[4].render();
 }
 
 ///////////////////////////////////////////
