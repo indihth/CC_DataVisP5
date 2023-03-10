@@ -15,6 +15,7 @@ function preload() {
   table = loadTable("data/covid_worldwide.csv", "csv", "header");
   table2 = loadTable("data/covid.csv", "csv", "header");
   usa = loadTable("data/covidUSA.csv", "csv", "header");
+  ireland = loadTable("data/age-sexIRL.csv", "csv", "header");
 
   table3 = loadTable("data/langReport.csv", "csv", "header");
 
@@ -43,7 +44,7 @@ function setup() {
     _lineNumberScale: 1000000000
   }));
 
-  charts.push(new StackedBarChart({
+  charts.push(new StackedBarChart100({
     _height: 300, 
     _width: 350, 
     _posX: 100, 
@@ -51,14 +52,16 @@ function setup() {
     // _posX: 600, 
     // _posY: 400, 
     _height: 300, 
-    _data: usa, 
-    _labelColumn: "Age Group",
+    _data: ireland, 
+    _labelColumn: "Age Groups",
     _dataColumns1: ["Female", "Male"],
-    _lineGraphColumnData: "total",
-    _linesTitle: "Average Totals",
+    _dataTotal: "Total",
+    _lineGraphColumnData: "populationin1000sF",
+    _linesTitle: "Female Population in 1000's",
     _graphTitle: "Male vs. Female Covid Cases",
     _yAxisTitle: "Cases in Millions",
-    _numTicks: 7
+    _numTicks: 4,
+    _xRotate: 1
   }));
 
   charts.push(new HorizontalBarChart({

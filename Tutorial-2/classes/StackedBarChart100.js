@@ -11,6 +11,7 @@ class StackedBarChart100 {
     _xRotate = 0,
     _labelColumn,
     _dataColumns1,
+    _dataTotal,
     _lineGraphColumnData = 0,
     _graphTitle = "Graph Title",
     _barsTitle = "Bars Title",
@@ -35,11 +36,13 @@ class StackedBarChart100 {
       // TABLE COLUMN SETTINGS
       this.columnNames = _dataColumns1;
     this.columnData = this.data.getColumn(_dataColumns1);
-    this.dataTotal = int(this.data.getColumn("total"));
+    this.dataTotal = int(this.data.getColumn(_dataTotal));
 
     this.columnTitle = _labelColumn;
     this.columnLabels = this.data.getColumn(_labelColumn);
     this.lineGraphColumnData = int(this.data.getColumn(_lineGraphColumnData));
+    // Seperate variable used to check if data for line chart was given
+    this.lineDataFilled = _lineGraphColumnData;
 
     // TABLE TITLES
     this.graphTitle = _graphTitle;
@@ -61,10 +64,11 @@ class StackedBarChart100 {
       this.numBlocks;
     // must generate num of ticks that fits evenly into maxValue, modulo
     this.numTicks = _numTicks;
+    // Sets number of ticks for the 100% axis to 5, gives even numbers
+    this.numTicks100 = 5;   
     this.notchGap = this.height / this.numTicks;
     this.tickLength = 5;
     this.maxValue = 100;
-    // this.maxValue = this.calculateMax(this.dataTotal);
     this.maxLineValue = this.calculateMax(this.lineGraphColumnData);
 
     // COLOUR PALETTE
@@ -83,6 +87,11 @@ class StackedBarChart100 {
 
   render() {
     this.mapData(this.columnData, this.mappedData, this.maxValue);
+    this.mapLineData(
+      this.lineGraphColumnData,
+      this.lineMappedData,
+      this.maxLineValue
+    );
 
     push();
     translate(this.posX, this.posY);
@@ -103,7 +112,7 @@ class StackedBarChart100 {
 
     for (let x = 0; x < _data.length; x++) {
       if (_data[x] > max) {
-        max = (_data[x]).toFixed();
+        max = _data[x].toFixed();
       }
     }
     // for (let x = max; x < 10000000; x++) {
@@ -120,7 +129,7 @@ class StackedBarChart100 {
   /////////////////////////////////////////////
   mapData(_val, _max) {
     // make numbers more manageable by using _numberScale to divide
-    // _array.forEach((element) => { 
+    // _array.forEach((element) => {
     //   element / this.numberScale;
     // });
 
@@ -133,11 +142,24 @@ class StackedBarChart100 {
 
     return map(_val, 0, _max, 0, this.height);
   }
-  
+
+  mapLineData(_array, _name, _maxValue) {
+    // make numbers more manageable by using _numberScale to divide
+    _array.forEach((element) => {
+      element / this.numberScale;
+    });
+
+    for (let i = 0; i < _array.length; i++) {
+      // maps each value to fit within the chart height and pushes into new array
+      _name.push(map(_array[i], 0, _maxValue, 0, this.height));
+    }
+  }
+
   barScaler(_bar, _total) {
     let scaleValue = this.height / _total;
-    return _bar * scaleValue;
-    }
+    // console.log(scaleValue);
+    return int(_bar * scaleValue);
+  }
 
   /////////////////////////////////////////////
   // Draws each bar in the bar chart
@@ -153,28 +175,28 @@ class StackedBarChart100 {
     push();
     translate(this.margin, 0);
     // translate(this.margin + (this.barWidth * x) + (this.barGap * x), 0);
-    
+
     // First loop to draw the bars
     for (let x = 0; x < this.data.getRowCount(); x++) {
       push();
 
-      let barHeight = int(-this.data.rows[x].obj["total"]);
+      let barHeight = -this.dataTotal[x];
       // console.log(barHeight);
 
       // Second loop to draw the stacks of each bar
       for (let y = 0; y < this.columnNames.length; y++) {
-
         // Scale the array of column data at this point
         let current = this.columnNames[y];
         let height = -this.data.rows[x].obj[current];
+        // console.log(height);
         fill(color(this.palette[y % this.palette.length]));
         rect(
           (this.barWidth + this.barGap) * x,
           0,
           this.barWidth,
-          -this.barScaler(height, barHeight),
+          -this.mapData(height, barHeight)
         );
-        translate(0, -this.barScaler(height, barHeight));
+        translate(0, -this.mapData(height, barHeight));
       }
       translate(this.barGap * x, 0);
       pop();
@@ -183,7 +205,8 @@ class StackedBarChart100 {
   }
 
   drawLineGraph() {
-    if (this.lineGraph == 0) {
+    // if no line data was given, then none of the line graphs elements will be drawn
+    if (this.lineDataFilled == 0) {
       return;
     } else {
       // DRAW DOTS
@@ -231,12 +254,16 @@ class StackedBarChart100 {
 
         if (this.lineNumberScale == 0) {
           //divide data values if a scale number is set e.g 1000's to 1
-          axisNum = (this.maxLineValue / this.numTicks) * x; //round to whole nums
+          axisNum = ((this.maxLineValue / this.numTicks) * x).toFixed(); //round to whole nums
         } else {
           axisNum = (
             ((this.maxLineValue / this.numTicks) * x) /
             this.lineNumberScale
-          ).toFixed(2); //round to whole nums
+          ).toFixed(); //round to whole nums
+        }
+
+        if (axisNum > 0) {
+          axisNum += "k";
         }
 
         fill(this.lightColour);
@@ -295,7 +322,14 @@ class StackedBarChart100 {
     // Draws column title
     textAlign(CENTER, CENTER);
     textSize(this.axisTitle);
-    text(this.columnTitle, this.width / 2, 40);
+    let pos = 45;
+
+    // If labels are rotated display lower
+    if (this.xRotate == 1) {
+      pos += 15;
+    }
+
+    text(this.columnTitle, this.width / 2, pos);
 
     // Draws column text
     for (let x = 0; x < this.numBlocks; x++) {
@@ -348,6 +382,11 @@ class StackedBarChart100 {
           this.numberScale
         ).toFixed(); //round to whole nums
       }
+
+      if (axisNum > 0) {
+        axisNum += "%";
+      }
+      
       // scale the numbers
       // if(this.labels == 1){
       fill(this.lightColour);
@@ -355,7 +394,7 @@ class StackedBarChart100 {
       textSize(this.yText);
       textFont("Helvetica");
       textAlign(RIGHT, CENTER);
-      text(axisNum.toFixed(), -this.tickLength - 5, x * -this.notchGap);
+      text(axisNum, -this.tickLength - 5, x * -this.notchGap);
       // }
     }
   }

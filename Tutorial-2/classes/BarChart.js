@@ -31,6 +31,8 @@ class BarChart {
     this.columnData = int(this.data.getColumn(_dataColumn));
     this.columnLabels = this.data.getColumn(_labelColumn);
     this.lineGraphColumnData = int(this.data.getColumn(_lineGraphColumnData));
+    // Seperate variable used to check if data for line chart was given
+    this.lineDataFilled = _lineGraphColumnData;
 
     // Line graph not draw if value has defaulted to 0
     this.columnTitle = _labelColumn;
@@ -146,7 +148,8 @@ class BarChart {
   }
 
   drawLineGraph() {
-    if (this.lineGraph == 0) {
+      // if no line data was given, then none of the line graphs elements will be drawn
+    if (this.lineDataFilled == 0) {
       return;
     } else {
       // DRAW DOTS
